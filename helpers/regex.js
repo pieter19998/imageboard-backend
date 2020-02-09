@@ -4,11 +4,23 @@ const emailRegex = (email) => {
         if (re.test(email)) {
             resolve();
         } else {
-            reject({errmsg: "invalid email"});
+            reject({message : "invalid email"});
         }
     });
 };
 
+const checkUndefined = (array) =>{
+    return new Promise((resolve, reject) => {
+        array.forEach(async function(item){
+            if (item === undefined)
+            {
+                return reject({message : "missing data"});
+            }
+        });
+        resolve();
+    });
+};
+
 module.exports = {
-    emailRegex
+    emailRegex,checkUndefined
 };

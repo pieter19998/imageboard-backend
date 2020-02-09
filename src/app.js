@@ -22,7 +22,12 @@ app.all("*", function (req, res) {
 });
 
 app.use((err, req, res, next) => {
-    res.status(422).send({error: err.message});
+    if (err.message.includes("not found")){
+        res.status(404).send({error: err.message});
+    }
+    else {
+        res.status(422).send({error: err.message});
+    }
 });
 
 module.exports = app;

@@ -4,40 +4,41 @@ const driver = neo4j.driver(
     config.neo4jLocal.url,
     neo4j.auth.basic(config.neo4jLocal.username, config.neo4jLocal.password), {disableLosslessIntegers: true}
 );
-const session = driver.session();
 
-class neo4jDb {
-    static async createUser(userName, email, hash) {
-        const session = driver.session();
-        await session.run(
-            `CREATE (a:User {userName:"${userName}", email:"${email}", password: "${hash}", status:"1", role:"user"})`
-        );
-        await session.close();
-    }
-    static async getUserId(userName) {
-        const session = driver.session();
-        const result = await session.run(
-            `MATCH (n:User{userName:"${userName}"}) RETURN ID(n)`
-        );
+class QueryBuilder {
 
-        await session.close();
-        return await result.records[0].get(0);
+    static async queryBuilder(query) {
+        return new Promise((resolve, reject) => {
+            try {
+                const session = driver.session();
+                const result = session.run(query);
+                session.close();
+                resolve(result.records[0].get(0));
+            }catch (error) {
+                reject({message:"not found"})
+            }
+        })
     }
-    static async getUser(userName) {
-        const session = driver.session();
-        const result = await session.run(
-            `MATCH (n:User{userName:"${userName}"}) RETURN COLLECT(n)`
-        );
-        await session.close();
-        return await result.records[0].get(0);
+
+    static async createUser(username, email, hash) {
+        return this.queryBuilder(`CREATE (a:User {username:"${username}", email:"${email}", password: "${hash}", status:"1", role:"user"}) RETURN a`)
     }
-    static async updateUser(userName, email) {
-        const session = driver.session();
-        await session.run(
-            ``
-        );
+
+    static async getUserId(username) {
+        return this.queryBuilder(`MATCH (n:User{username:"${username}", status:"1" }) RETURN ID(n)`)
+    }
+
+    static async getUser(username) {
+        return this.queryBuilder(`MATCH (n:User{username:"${username}" , status:"1" }) RETURN n`);
+    }
+
+    static async login(username, password) {
+        return this.queryBuilder(`MATCH (n:User{username:"${username}", password:"${password}" , status:"1"}) RETURN n`);
+    }
+
+    static async deleteUser(username, id) {
+        return this.queryBuilder(`MATCH (u:User{username:"${username}" , status:"1"}) SET u.status = "0" RETURN u`);
     }
 }
 
-
-module.exports = neo4jDb;
+module.exports = QueryBuilder;
