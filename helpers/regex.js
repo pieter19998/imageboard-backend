@@ -14,7 +14,7 @@ const checkUndefined = (array) =>{
         array.forEach(async function(item){
             if (item === undefined)
             {
-                return reject({message : "missing data"});
+                return reject({message : "undefined"});
             }
         });
         resolve();

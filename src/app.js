@@ -4,29 +4,38 @@ const app = express();
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
-app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin","*");
-    res.header("Access-Control-Allow-Methods", "GET,HEAD,POST,PUT");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
+app.use(async function (req, res, next) {
+    await res.header("Access-Control-Allow-Origin", "*");
+    await res.header("Access-Control-Allow-Methods", "GET,HEAD,POST,PUT");
+    await res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    await next();
 });
 const UserController = require('./controllers/user.controller');
+const BoardController = require('./controllers/board.controller');
+const ThreadController = require('./controllers/thread.controller');
 
 app.use('/api/user', UserController);
+app.use('/api/board', BoardController);
+app.use('/api/thread', ThreadController);
 
-app.all("*", function (req, res) {
-    res.status(404);
-    res.json({
+app.all("*", async function (req, res) {
+   await res.status(404);
+   await res.json({
         description: "Unknown endpoint"
     });
 });
 
 app.use((err, req, res, next) => {
-    if (err.message.includes("not found")){
-        res.status(404).send({error: err.message});
-    }
-    else {
-        res.status(422).send({error: err.message});
+    switch (err) {
+        case err.message.includes("not found"):
+            res.status(404).send({error: err.message});
+            break;
+        case err.message.includes("token"):
+            res.status(401).send({error: err.message});
+            break;
+        default:
+            res.status(422).send({error: err.message});
+            break;
     }
 });
 
