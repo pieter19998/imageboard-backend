@@ -6,7 +6,7 @@ const encode = (username, userId, role) => {
     return new Promise(resolve => {
         const payload = {
             exp: moment()
-                .add(10, "days")
+                .add(100, "days")
                 .unix(),
             iat: moment().unix(),
             username: username,

@@ -3,8 +3,13 @@ const uuid = require("uuid");
 
 class boardQueries extends QueryBuilder{
 
-    static async creatBoard(name,description) {
-        return super.queryBuilder(`CREATE (a:Board {id: "${uuid.v4()}", name:"${name}", description:"${description}", status:"1", creationDate:"${Date.now()}"})`)
+    static async creatBoard(name,description,user) {
+        return super.queryBuilder(`
+                                MATCH (u:User {id:"${user}"})
+                                CREATE (b:Board {id: "${uuid.v4()}", name:"${name}", description:"${description}", status:"1", creationDate:"${Date.now()}"})
+                                MERGE (u)-[r:AUTHOR]->(b)
+                                `)
+
     }
 
     static async getBoards() {

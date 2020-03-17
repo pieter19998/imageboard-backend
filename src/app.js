@@ -7,16 +7,18 @@ app.use(bodyParser.json());
 app.use(async function (req, res, next) {
     await res.header("Access-Control-Allow-Origin", "*");
     await res.header("Access-Control-Allow-Methods", "GET,HEAD,POST,PUT");
-    await res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    await res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, token");
     await next();
 });
 const UserController = require('./controllers/user.controller');
 const BoardController = require('./controllers/board.controller');
 const ThreadController = require('./controllers/thread.controller');
+const CommentController = require('./controllers/comment.controller');
 
 app.use('/api/user', UserController);
 app.use('/api/board', BoardController);
 app.use('/api/thread', ThreadController);
+app.use('/api/comment', CommentController);
 
 app.all("*", async function (req, res) {
    await res.status(404);

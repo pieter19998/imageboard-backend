@@ -1,28 +1,31 @@
 const QueryBuilder = require('./queryBuilder');
 const uuid = require("uuid");
 
-class threadQueries extends QueryBuilder{
+class threadQueries extends QueryBuilder {
 
-    static async createThread(title,text,image = null,board,user) {
+    static async createThread(title, text, image = null, board, user) {
         return super.queryBuilder(`
                         MATCH (b:Board {name:"${board}"})
-                        MATCH (u:User {username:"${user}"})
+                        MATCH (u:User {id:"${user}"})
                         CREATE (t:Thread {id: "${uuid.v4()}", title:"${title}", text:"${text}", image:"${image}", status:"1", creationDate:"${Date.now()}"})
-                        MERGE (t)-[r:CREATED]->(b)
+                        MERGE (t)-[r:REPLY]->node(b)
                         MERGE (u)-[s:AUTHOR]->(t)
-                        `);
+        `);
     }
 
-    static async getThread(id) {
-        return super.queryBuilder(`MATCH (t:Thread{id:"${id}" , status:"1" }) RETURN t`);
+    static async getThread(thread) {
+        return super.queryBuilder(`
+                  MATCH path = (t:Thread {id:"${thread}"})<-[r*]-(c)
+                  WITH collect(path) as paths
+                  CALL apoc.convert.toTree(paths) yield value
+                  RETURN value
+        `);
     }
 
     static async getThreadsByBoard(board) {
         return super.queryBuilder(`
-                  MATCH path = (b:Board {name:"${board}"})<-[r*]-(c)
-                  WITH collect(path) as paths
-                  CALL apoc.convert.toTree(paths) yield value
-                  RETURN value
+                MATCH path = (b:Board {name:"${board}"})<-[r:REPLY]-(c)
+                return c
         `);
     }
 

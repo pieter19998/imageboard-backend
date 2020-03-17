@@ -12,12 +12,14 @@ router.get('/:name', async (req, res, next) => {
         await Jwt.decode(token);
         const result = await QueryBuilder.getBoard(name);
         await Regex.checkUndefined([result[0]]);
+        console.log(result[0])
         const board = result[0].properties;
         await res.status(200).send({
             id: board.id,
             name: board.name,
             description: board.description,
-            creationDate: board.creationDate
+            creationDate: board.creationDate,
+            username: board.author[0].username
         });
     } catch (error) {
         return next(error)
@@ -49,12 +51,13 @@ router.get('/', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
     const name = req.body.name;
     const description = req.body.description;
+    const token = req.header('token');
 
     try {
+        const user = await Jwt.decode(token);
         await Regex.checkUndefined([name, description]);
-        await QueryBuilder.creatBoard(name, description);
+        await QueryBuilder.creatBoard(name, description, user.id);
         res.status(200).send();
-
     } catch (error) {
         return next(error)
     }

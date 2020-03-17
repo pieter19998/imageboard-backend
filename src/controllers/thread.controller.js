@@ -11,14 +11,34 @@ router.get('/:threadId', async (req, res, next) => {
     try {
         await Jwt.decode(token);
         const result = await QueryBuilder.getThread(threadId);
-        const thread = await result[0].properties;
-        await res.status(200).send({
-            id: thread.id,
-            title: thread.title,
-            text: thread.text,
-            image: thread.image,
-            creationDate: thread.creationDate
-        }).end();
+        let thread = [{
+            id: result[0].id,
+            title: result[0].title,
+            text: result[0].text,
+            creationDate: result[0].creationDate,
+            username: result[0].author[0].username,
+            reply:[]
+        }];
+        await test(result[0].reply, 0);
+        async function test(array, level) {
+            let x = [];
+            if (array[0] !== undefined) {
+                for (let i = 0; array[i] !== undefined; i++) {
+                    if (array[i].status === "1") {
+                        x.push({id: array[i].id,
+                        text: array[i].text,
+                        creationDate: array[i].creationDate,
+                        username: array[i].author[0].username,
+                        reply:[]});
+                    }
+                }
+                thread.push({reply: [x]});
+                if (array[0].reply !== undefined) {
+                    await test(array[0].reply, level + 1)
+                }
+            }
+        }
+        await res.status(200).send(thread).end();
     } catch (error) {
         return next(error)
     }
@@ -31,11 +51,11 @@ router.post('/:board', async (req, res, next) => {
     const title = req.body.title;
     const text = req.body.text;
     const image = req.body.image;
-    const user = await Jwt.decode(token);
 
     try {
+        const user = await Jwt.decode(token);
         await Regex.checkUndefined([title, text]);
-        await QueryBuilder.createThread(title, text, image, board, user.username);
+        await QueryBuilder.createThread(title, text, image, board, user.id);
         await res.status(200).send().end();
     } catch (error) {
         return next(error)
@@ -45,24 +65,20 @@ router.post('/:board', async (req, res, next) => {
 router.get('/board/:board', async (req, res, next) => {
     const token = req.header('token');
     const board = req.params.board;
-
     let list = [];
 
     try {
         await Jwt.decode(token);
         const result = await QueryBuilder.getThreadsByBoard(board);
-        await result[0].created.forEach((item) => {
-            console.log(item.status)
-            if (item.status === "1") {
-                list.push({
-                    id: item.id,
-                    title: item.title,
-                    text: item.text,
-                    image: item.image,
-                    creationDate: item.creationDate,
-                    user: item.author[0].username
-                });
-            }
+
+        await result.forEach((item) => {
+            list.push({
+                id: item.properties.id,
+                title: item.properties.title,
+                text: item.properties.text,
+                image: item.properties.image,
+                creationDate: item.properties.creationDate
+            });
         });
 
         await res.status(200).send(list).end();
