@@ -6,7 +6,6 @@ const driver = queryBuilder.driver(
 );
 
 class QueryBuilder {
-
     static async queryBuilder(query) {
         return new Promise(async (resolve, reject) => {
             try {

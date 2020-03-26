@@ -4,41 +4,37 @@ const QueryBuilder = require('../../queryBuilder/thread.queries');
 const Jwt = require('../../helpers/jwt');
 const Regex = require('../../helpers/regex');
 
-//get thread
-router.get('/:threadId', async (req, res, next) => {
-    const threadId = req.params.threadId;
+//get thread by board
+router.get('/:board', async (req, res, next) => {
     const token = req.header('token');
+    const board = req.params.board;
+
     try {
         await Jwt.decode(token);
-        const result = await QueryBuilder.getThread(threadId);
-        let thread = [{
-            id: result[0].id,
-            title: result[0].title,
-            text: result[0].text,
-            creationDate: result[0].creationDate,
-            username: result[0].author[0].username,
-            reply:[]
-        }];
-        await test(result[0].reply, 0);
-        async function test(array, level) {
-            let x = [];
+        const result = await QueryBuilder.getThreadsByBoard(board);
+        await Regex.checkUndefined([result[0]]);
+        const threads = [];
+
+        await test(result[0].reply);
+
+        async function test(array) {
             if (array[0] !== undefined) {
                 for (let i = 0; array[i] !== undefined; i++) {
                     if (array[i].status === "1") {
-                        x.push({id: array[i].id,
-                        text: array[i].text,
-                        creationDate: array[i].creationDate,
-                        username: array[i].author[0].username,
-                        reply:[]});
+                        threads.push({
+                            id: array[i].id,
+                            title: array[i].title,
+                            text: array[i].text,
+                            image: array[i].image,
+                            creationDate: array[i].creationDate,
+                            username: array[i].author[0].username
+                        });
                     }
-                }
-                thread.push({reply: [x]});
-                if (array[0].reply !== undefined) {
-                    await test(array[0].reply, level + 1)
                 }
             }
         }
-        await res.status(200).send(thread).end();
+
+        await res.status(200).send(threads);
     } catch (error) {
         return next(error)
     }

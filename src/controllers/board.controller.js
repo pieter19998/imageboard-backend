@@ -12,15 +12,26 @@ router.get('/:name', async (req, res, next) => {
         await Jwt.decode(token);
         const result = await QueryBuilder.getBoard(name);
         await Regex.checkUndefined([result[0]]);
-        console.log(result[0])
-        const board = result[0].properties;
-        await res.status(200).send({
-            id: board.id,
-            name: board.name,
-            description: board.description,
-            creationDate: board.creationDate,
-            username: board.author[0].username
-        });
+        const board = [];
+
+        await test(result[0].reply);
+        async function test(array) {
+            if (array[0] !== undefined) {
+                for (let i = 0; array[i] !== undefined; i++) {
+                    if (array[i].status === "1") {
+                        board.push({
+                            id: array[i].id,
+                            title: array[i].title,
+                            text: array[i].text,
+                            image: array[i].image,
+                            creationDate: array[i].creationDate,
+                            username: array[i].author[0].username
+                        });
+                    }
+                }
+            }
+        }
+        await res.status(200).send(board);
     } catch (error) {
         return next(error)
     }

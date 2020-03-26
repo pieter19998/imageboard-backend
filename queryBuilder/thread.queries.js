@@ -8,25 +8,22 @@ class threadQueries extends QueryBuilder {
                         MATCH (b:Board {name:"${board}"})
                         MATCH (u:User {id:"${user}"})
                         CREATE (t:Thread {id: "${uuid.v4()}", title:"${title}", text:"${text}", image:"${image}", status:"1", creationDate:"${Date.now()}"})
-                        MERGE (t)-[r:REPLY]->node(b)
+                        MERGE (t)-[r:REPLY]->(b)
                         MERGE (u)-[s:AUTHOR]->(t)
         `);
     }
 
     static async getThread(thread) {
         return super.queryBuilder(`
-                  MATCH path = (t:Thread {id:"${thread}"})<-[r*]-(c)
-                  WITH collect(path) as paths
-                  CALL apoc.convert.toTree(paths) yield value
-                  RETURN value
         `);
     }
 
     static async getThreadsByBoard(board) {
         return super.queryBuilder(`
-                MATCH path = (b:Board {name:"${board}"})<-[r:REPLY]-(c)
-                return c
-        `);
+                  MATCH path = (a:Board{name:'${board}', status:"1"})-[r:REPLY]-(t:Thread)-[q:AUTHOR]-(x:User) 
+                  WITH collect(path) as paths
+                  CALL apoc.convert.toTree(paths) yield value
+                  RETURN value`);
     }
 
     //todo delete by id

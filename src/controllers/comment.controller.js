@@ -4,21 +4,41 @@ const QueryBuilder = require('../../queryBuilder/comment.queries');
 const Jwt = require('../../helpers/jwt');
 const Regex = require('../../helpers/regex');
 
-router.get('/:id', async (req, res, next) => {
+router.get('/:threadId', async (req, res, next) => {
+    const threadId = req.params.threadId;
     const token = req.header('token');
-    const id = req.params.id;
-
     try {
         await Jwt.decode(token);
-        const result = await QueryBuilder.getComment(id);
-        await Regex.checkUndefined([result[0]]);
-        const board = result[0].properties;
-        await res.status(200).send({
-            id: board.id,
-            name: board.name,
-            description: board.description,
-            creationDate: board.creationDate
-        });
+        const result = await QueryBuilder.getComments(threadId);
+        let thread = [{
+            id: result[0].id,
+            title: result[0].title,
+            text: result[0].text,
+            creationDate: result[0].creationDate,
+            username: result[0].author[0].username,
+            reply:[]
+        }];
+        await test(result[0].reply, 0);
+        async function test(array, level) {
+            let x = [];
+            if (array[0] !== undefined) {
+                for (let i = 0; array[i] !== undefined; i++) {
+                    if (array[i].status === "1") {
+                        x.push({
+                            id: array[i].id,
+                            text: array[i].text,
+                            creationDate: array[i].creationDate,
+                            username: array[i].author[0].username,
+                            reply:[]});
+                    }
+                }
+                thread.push({reply: [x]});
+                if (array[0].reply !== undefined) {
+                    await test(array[0].reply, level + 1)
+                }
+            }
+        }
+        await res.status(200).send(thread).end();
     } catch (error) {
         return next(error)
     }

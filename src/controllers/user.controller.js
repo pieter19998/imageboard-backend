@@ -25,6 +25,25 @@ router.get('/:username', async (req, res, next) => {
     }
 });
 
+router.get('/', async (req, res, next) => {
+    const token = req.header('token');
+    console.log(token);
+    try {
+        const username = await Jwt.decode(token);
+        const result = await QueryBuilder.getUser(username.username);
+        await Regex.checkUndefined([result[0]]);
+        const user = await result[0].properties;
+        await res.status(200).send({
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            role: user.role
+        }).end();
+    } catch (error) {
+        return next(error)
+    }
+});
+
 //create new user
 router.post('/', async (req, res, next) => {
     const username = req.body.username;
