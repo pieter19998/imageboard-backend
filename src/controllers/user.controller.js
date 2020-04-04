@@ -4,6 +4,8 @@ const QueryBuilder = require('../../queryBuilder/user.queries');
 const Bcrypt = require('bcrypt');
 const Jwt = require('../../helpers/jwt');
 const Regex = require('../../helpers/regex');
+const uuid = require("uuid");
+
 
 //get new user
 router.get('/:username', async (req, res, next) => {
@@ -31,13 +33,15 @@ router.get('/', async (req, res, next) => {
     try {
         const username = await Jwt.decode(token);
         const result = await QueryBuilder.getUser(username.username);
-        await Regex.checkUndefined([result[0]]);
+        await Regex.checkUndefined([{item : result[0]}]);
         const user = await result[0].properties;
         await res.status(200).send({
             id: user.id,
             username: user.username,
             email: user.email,
-            role: user.role
+            role: user.role,
+            gender: user.gender,
+            dateOfBirth: user.dateOfBirth
         }).end();
     } catch (error) {
         return next(error)
@@ -50,13 +54,16 @@ router.post('/', async (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
     const role = req.body.role;
-
+    const gender = req.body.gender;
+    const dateOfBirth = req.body.dateOfBirth;
+    const id = uuid.v4();
     try {
-        await Regex.checkUndefined([username, password, email, role]);
+        await Regex.checkUndefined([{item: username, field:"username"},{item: password, field:"password"},{item: email, field:"email"},{item: role, field:"role"},{item: gender, field:"gender"},{item: dateOfBirth, field:"dateOfBirth"}]);
+        await Regex.checkLength([{item: username, length: 25, field:"username"},{item: password, length: 20, field:"password"},{item: email, length: 100, field:"email"}]);
         const hash = Bcrypt.hashSync(password, 10);
         await Regex.emailRegex(email);
-        await QueryBuilder.createUser(username, email, hash);
-        res.status(200).send().end();
+        await QueryBuilder.createUser(username, email, hash, id, gender, dateOfBirth,role);
+        res.status(200).send({token: await Jwt.encode(username, id, role)});
 
     } catch (error) {
         return next(error)
@@ -69,7 +76,7 @@ router.post('/login', async (req, res, next) => {
     const password = req.body.password;
 
     try {
-        await Regex.checkUndefined([username, password]);
+        await Regex.checkUndefined([{item: username, field:"username"},{item: password, field:"password"}]);
         const result = await QueryBuilder.getUser(username, password);
         if (result[0] !== undefined) {
             const user = await result[0].properties;
@@ -79,6 +86,26 @@ router.post('/login', async (req, res, next) => {
             res.status(401).send().end();
         }
         res.status(401).send().end();
+    } catch (error) {
+        return next(error)
+    }
+});
+
+router.put('/', async (req, res, next) => {
+    const username = req.body.username;
+    const email = req.body.email;
+    const gender = req.body.gender;
+    const dateOfBirth = req.body.dateOfBirth;
+    const role = req.body.role;
+    const token = req.header('token');
+
+    try {
+        const user = await Jwt.decode(token);
+        await Regex.checkUndefined([{item: username, field:"username"}, {item: email, field:"email"}, {item: gender, field:"gender"}, {item: dateOfBirth, field:"dateOfBirth"}]);
+        await Regex.checkLength([{item: username, length: 25, field:"username"},{item: email, length: 100, field:"email"}]);
+        await Regex.emailRegex(email);
+        await QueryBuilder.updateUser(username, email, user.id, gender, dateOfBirth,role);
+        res.status(200).send();
     } catch (error) {
         return next(error)
     }

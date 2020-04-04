@@ -15,14 +15,18 @@ class boardQueries extends QueryBuilder {
 
     static async getBoard(name) {
         return super.queryBuilder(`
-                  MATCH path = (a:Board{name:'${name}', status:"1"})-[r:REPLY]-(t:Thread)-[q:AUTHOR]-(x:User) 
+                  MATCH path = (a:Board{name:'${name}', status:"1"})-[q:AUTHOR]-(x:User) 
                   WITH collect(path) as paths
                   CALL apoc.convert.toTree(paths) yield value
                   RETURN value`);
     }
 
-    static async deleteBoard(name, id) {
-        return super.queryBuilder(`MATCH (b:Board{name:"${name}" , status:"1"}) SET u.status = "0"`);
+    static async updateBoard(name, newName, description) {
+        return super.queryBuilder(`MATCH (b:Board{name:"${name}", status:"1" }) SET b.name = "${newName}", b.description ="${description}"`);
+    }
+
+    static async deleteBoard(name) {
+        return super.queryBuilder(`MATCH (b:Board{name:"${name}" , status:"1"}) SET b.status = "0"`);
     }
 }
 

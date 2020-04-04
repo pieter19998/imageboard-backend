@@ -4,15 +4,16 @@ const QueryBuilder = require('../../queryBuilder/thread.queries');
 const Jwt = require('../../helpers/jwt');
 const Regex = require('../../helpers/regex');
 
-//get thread by board
-router.get('/:board', async (req, res, next) => {
+// get thread by board
+router.get('/board/:board', async (req, res, next) => {
     const token = req.header('token');
     const board = req.params.board;
 
     try {
-        await Jwt.decode(token);
+        // await Jwt.decode(token);
         const result = await QueryBuilder.getThreadsByBoard(board);
-        await Regex.checkUndefined([result[0]]);
+        await Regex.checkUndefined([{item: result[0], field: "data"}]);
+
         const threads = [];
 
         await test(result[0].reply);
@@ -27,7 +28,8 @@ router.get('/:board', async (req, res, next) => {
                             text: array[i].text,
                             image: array[i].image,
                             creationDate: array[i].creationDate,
-                            username: array[i].author[0].username
+                            username: array[i].author[0].username,
+                            board: board
                         });
                     }
                 }
@@ -35,6 +37,26 @@ router.get('/:board', async (req, res, next) => {
         }
 
         await res.status(200).send(threads);
+    } catch (error) {
+        return next(error)
+    }
+});
+
+router.get('/:id', async (req, res, next) => {
+    const token = req.header('token');
+    const id = req.params.id;
+    try {
+        // await Jwt.decode(token);
+        const result = await QueryBuilder.getThread(id);
+        await Regex.checkUndefined([{item: result[0], field: "data"}]);
+        const board = result[0];
+        await res.status(200).send({
+            id: board.id,
+            title: board.title,
+            text: board.text,
+            creationDate: board.creationDate,
+            author: board.author[0].username,
+        });
     } catch (error) {
         return next(error)
     }
@@ -50,7 +72,8 @@ router.post('/:board', async (req, res, next) => {
 
     try {
         const user = await Jwt.decode(token);
-        await Regex.checkUndefined([title, text]);
+        await Regex.checkUndefined([{item: title, field: "title"} , {item: text, field: text}]);
+        await Regex.checkLength([{item: title, length: 25, field:"title"},{item: text, length: 240, field:"text"}]);
         await QueryBuilder.createThread(title, text, image, board, user.id);
         await res.status(200).send().end();
     } catch (error) {
@@ -58,28 +81,36 @@ router.post('/:board', async (req, res, next) => {
     }
 });
 
-router.get('/board/:board', async (req, res, next) => {
+router.put('/:id', async (req, res, next) => {
+    const id = req.params.id;
+    const title = req.body.title;
+    const text = req.body.text;
+    const image = req.body.image;
     const token = req.header('token');
-    const board = req.params.board;
-    let list = [];
 
     try {
         await Jwt.decode(token);
-        const result = await QueryBuilder.getThreadsByBoard(board);
-
-        await result.forEach((item) => {
-            list.push({
-                id: item.properties.id,
-                title: item.properties.title,
-                text: item.properties.text,
-                image: item.properties.image,
-                creationDate: item.properties.creationDate
-            });
-        });
-
-        await res.status(200).send(list).end();
+        await Regex.checkUndefined([{item: title, field: "title"} , {item: text, field: text}]);
+        await Regex.checkLength([{item: title, length: 25, field:"title"},{item: text, length: 240, field:"text"}]);
+        await QueryBuilder.updateThread(id,title,text);
+        res.status(200).send();
     } catch (error) {
         return next(error)
     }
 });
+
+router.delete('/:id', async (req, res, next) => {
+    const id = req.params.id;
+    const token = req.header('token');
+
+    try {
+        const user = await Jwt.decode(token);
+        await Regex.checkUndefined([{item: id, field: "id"} , {item: user.username, field: "username"}]);
+        await QueryBuilder.deleteThread(id, user.username);
+        res.status(200).send();
+    } catch (error) {
+        return next(error)
+    }
+});
+
 module.exports = router;
