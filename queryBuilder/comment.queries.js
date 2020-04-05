@@ -3,7 +3,7 @@ const uuid = require("uuid");
 
 class threadQueries extends QueryBuilder {
 
-    static async createCommentOnThread(text, image = null, threadId, user) {
+    static async createCommentOnThread(text, image, threadId, user) {
         return super.queryBuilder(`
             MATCH (t:Thread {id:"${threadId}"})
             MATCH (u:User {id:"${user}"})
@@ -13,7 +13,7 @@ class threadQueries extends QueryBuilder {
                         `);
     }
 
-    static async createCommentOnComment(text, image = null, commentId, user) {
+    static async createCommentOnComment(text, image, commentId, user) {
         return super.queryBuilder(`
             MATCH (a:Comment {id:"${commentId}"})
             MATCH (u:User {id:"${user}"})
@@ -31,16 +31,17 @@ class threadQueries extends QueryBuilder {
             RETURN value
         `);
     }
+
     static async getComments(thread) {
         return super.queryBuilder(`
-            MATCH path = (t:Thread {id:"${thread}"})<-[r*]-(c)
+            MATCH path = (t:Thread {id:"${thread}", status:"1"})<-[r*]-(c)
             WITH collect(path) as paths
             CALL apoc.convert.toTree(paths) yield value
             RETURN value
         `);
     }
 
-    static async updateComment(id,text,image) {
+    static async updateComment(id, text, image) {
         return super.queryBuilder(`
             MATCH (c:Comment{id:"${id}", status:"1" })
             SET c.text = "${text}", c.image ="${image}"

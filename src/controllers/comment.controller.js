@@ -30,6 +30,7 @@ router.get('/thread/:threadId', async (req, res, next) => {
                                 text: array[i].text,
                                 creationDate: array[i].creationDate,
                                 username: array[i].author[0].username,
+                                image: array[i].image   ,
                                 threadId: threadId
                             });
                         }
@@ -59,10 +60,11 @@ router.get('/:id', async (req, res, next) => {
         const result = await QueryBuilder.getComment(id);
         await Regex.checkUndefined([{item: result[0], field: "data"}]);
         const comment = result[0];
-        await console.log(comment);
+        await console.log("lol");
         await res.status(200).send({
             id: comment.id,
             text: comment.text,
+            image: comment.image,
             creationDate: comment.creationDate,
             author: comment.author[0].username,
         });

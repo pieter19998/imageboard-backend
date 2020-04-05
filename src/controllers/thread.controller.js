@@ -54,6 +54,7 @@ router.get('/:id', async (req, res, next) => {
             id: board.id,
             title: board.title,
             text: board.text,
+            image: board.image,
             creationDate: board.creationDate,
             author: board.author[0].username,
         });
@@ -92,7 +93,7 @@ router.put('/:id', async (req, res, next) => {
         await Jwt.decode(token);
         await Regex.checkUndefined([{item: title, field: "title"} , {item: text, field: text}]);
         await Regex.checkLength([{item: title, length: 25, field:"title"},{item: text, length: 240, field:"text"}]);
-        await QueryBuilder.updateThread(id,title,text);
+        await QueryBuilder.updateThread(id,title,text,image);
         res.status(200).send();
     } catch (error) {
         return next(error)

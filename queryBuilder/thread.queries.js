@@ -3,7 +3,7 @@ const uuid = require("uuid");
 
 class threadQueries extends QueryBuilder {
 
-    static async createThread(title, text, image = null, board, user) {
+    static async createThread(title, text, image, board, user) {
         return super.queryBuilder(`
                   MATCH (b:Board {name:"${board}"})
                   MATCH (u:User {id:"${user}"})
@@ -30,8 +30,8 @@ class threadQueries extends QueryBuilder {
                   RETURN value`);
     }
 
-    static async updateThread(id,title,text) {
-        return super.queryBuilder(`MATCH (t:Thread{id:"${id}", status:"1" }) SET t.title = "${title}", t.text ="${text}"`);
+    static async updateThread(id,title,text,image) {
+        return super.queryBuilder(`MATCH (t:Thread{id:"${id}", status:"1" }) SET t.title = "${title}", t.text ="${text}" , t.image ="${image}"`);
     }
 
     static async deleteThread(id,user) {
