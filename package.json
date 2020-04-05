@@ -6,6 +6,9 @@
   "scripts": {
     "serve": "nodemon index.js"
   },
+  "engines": {
+    "node": "12.16.x"
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {
