@@ -1,7 +1,7 @@
 {
     "neo4jLocal": {
         "url": "bolt://hobby-gpghndhpafecgbkefocfaoel.dbs.graphenedb.com:24787",
-        "username": "imageboard",
+        "username": "admin",
         "db": "imageBoard",
         "password": "b.w3QHtkbnMqsH.g3ouaswryxep7Xf2"
     },
