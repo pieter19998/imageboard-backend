@@ -1,16 +1,16 @@
 {
     "neo4jLocal": {
-        "url": "bolt://hobby-gpghndhpafecgbkefocfaoel.dbs.graphenedb.com:24787",
-        "username": "admin",
-        "db": "imageBoard",
-        "password": "b.w3QHtkbnMqsH.g3ouaswryxep7Xf2"
+        "url": "=",
+        "username": "-",
+        "db": "-",
+        "password": "-"
     },
 
     "local": {
-        "key": "key123",
+        "key": "-",
         "port": "3000"
     },
     "remote": {
-        "key": "key123"
+        "key": "-"
     }
 }
